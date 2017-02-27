@@ -22,7 +22,7 @@ struct Point
 Point a[4];
 Point b[4];
 
-int figures[8][4] =
+int figures[7][4] =
 {
 	1,3,5,7, // I
 	2,4,5,7, // Z
@@ -30,8 +30,8 @@ int figures[8][4] =
 	3,5,4,7, // T
 	2,3,5,7, // L
 	3,5,7,6, // J
-	2,3,4,5, // O
-	5,5,5,5
+	2,3,4,5 // O
+
 };
 
 std::ofstream Log;
@@ -66,7 +66,7 @@ void OutArrayValueInLog(int WhatIndex, int WhatIndex2, int Who)
 	Log.close();
 }
 ///////check lines and destroy //////////
-void CheckLineDestroy(Text &TextScore, RenderWindow &window)
+void CheckLineDestroy(Text &TextScore, RenderWindow &window,Sound &soundLevel)
 {
 	//указывает индексы где разрушаемая линия
 	int k = M - 1;
@@ -92,6 +92,7 @@ void CheckLineDestroy(Text &TextScore, RenderWindow &window)
 			TextScore.setString(toString(Score));
 			TextScore.setPosition(250, 100);
 			window.draw(TextScore);
+			soundLevel.play();
 		}
 	}
 
@@ -336,19 +337,24 @@ int main()
 	sf::SoundBuffer bufferLevelUp;
 	sf::Music BackMusic;
 	sf::Sound soundDown, soundMove, soundLevel;
-	if (!BackMusic.openFromFile("images/backMusic.mp3"))
+	if (!BackMusic.openFromFile("images/backMusic.ogg"))
 	{
 		printf("not found music");
 	}
-	if (!bufferMove.loadFromFile("images/move.wav"))
+	if (!bufferMove.loadFromFile("images/move.ogg"))
 	{
 		printf("not found move");
 	}
-	if (!bufferDown.loadFromFile("images/down.mp3"))
+	if (!bufferDown.loadFromFile("images/down.ogg"))
+	{
+		printf("not found down");
+	}
+	if (!bufferLevelUp.loadFromFile("images/destroy.ogg"))
 	{
 		printf("not found down");
 	}
 
+	soundLevel.setBuffer(bufferLevelUp);
 	soundDown.setBuffer(bufferDown);
 	soundMove.setBuffer(bufferMove);
 	BackMusic.setLoop(true);
@@ -377,7 +383,11 @@ int main()
 	TextLevel.setColor(sf::Color::Green);
 	TextLevel.setString(toString(Level));
 	Vector2f posLevel(230, 30);
-
+BackMusic.play();
+		if (BackMusic.getStatus() == sf::Sound::Playing)
+		{
+			printf("Play...");
+		}
 	Clock clock;
 	while (window.isOpen())
 	{
@@ -398,7 +408,7 @@ int main()
 				window.draw(TextStateGame);
 		}
 
-		BackMusic.play();
+		
 		CheckLevel(TextLevel, window, posLevel, delay);
 		float time = clock.getElapsedTime().asSeconds();
 		clock.restart();
@@ -412,13 +422,35 @@ int main()
 
 			if (e.type == Event::KeyPressed)
 
-				if (e.key.code == Keyboard::Up) { rotate = true; soundMove.play(); }
+				if (e.key.code == Keyboard::Up) 
+				{
+					rotate = true;
+					/*if(soundMove.getStatus() != sf::Sound::Playing)
+					soundMove.play(); */
+				}
 
-				else if (e.key.code == Keyboard::Left) { dx = -1; soundMove.play(); }
-				else if (e.key.code == Keyboard::Right) { dx = 1; soundMove.play(); }
+				else if (e.key.code == Keyboard::Left)
+				{ 
+					dx = -1;
+					/*if (soundMove.getStatus() != sf::Sound::Playing)
+						soundMove.play();*/
+				}
+				else if (e.key.code == Keyboard::Right)
+				{ 
+					dx = 1;
+					/*if (soundMove.getStatus() != sf::Sound::Playing)
+						soundMove.play();*/
+				}
 		}
 
-		if (Keyboard::isKeyPressed(Keyboard::Down)) { delay = 0.05; soundDown.play(); }
+		if (Keyboard::isKeyPressed(Keyboard::Down)) 
+		{
+			delay = 0.05;
+			if (soundDown.getStatus() != sf::Sound::Playing) 
+		{
+				soundDown.play();
+			
+		} }
 		if (Keyboard::isKeyPressed(Keyboard::Escape)) exit(0);
 		if (Keyboard::isKeyPressed(Keyboard::N)) // NewGame
 		{
@@ -467,7 +499,7 @@ int main()
 			timer = 0;
 		}
 }
-		CheckLineDestroy(TextScore,window);
+		CheckLineDestroy(TextScore,window,soundLevel);
 		dx = 0; rotate = 0; delay = 0.3;
 		DrawBackground(&window,background);
 
